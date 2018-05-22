@@ -1,0 +1,63 @@
+version: '2'
+services:
+  master:
+    container_name: master
+    image: rplidar
+    hostname: master
+    networks:
+      net2:
+        ipv4_address: 20.1.0.6 
+    extra_hosts:
+      - "master:20.1.0.6"
+      - "lidar1:20.1.0.7"
+      - "viz:20.1.0.8"
+      - "create2_driver:20.1.0.10"
+      - "teleop1:20.1.0.11"
+    command: roscore
+
+  lidar1:
+    container_name: lidar1
+    image: rplidar
+    devices:
+      - /dev/ttyUSB_lidar:/dev/ttyUSB_lidar
+    hostname: lidar1
+    depends_on:
+      - master
+    environment:
+      - ROS_MASTER_URI=http://master:11311
+    networks:
+      net2:
+        ipv4_address: 20.1.0.7
+    extra_hosts:
+      - "master:20.1.0.6"
+      - "lidar1:20.1.0.7"
+      - "viz:20.1.0.8"
+      - "create2_driver:20.1.0.10"
+      - "teleop1:20.1.0.11"
+    command: /bin/bash -c "sleep 13; source /root/catkin_ws/devel/setup.bash; roslaunch rplidar_ros rplidar.launch"
+
+  
+  create2_driver:
+    container_name: create2_driver
+    image: create2
+    hostname: create2_driver
+    devices:
+            - /dev/ttyUSB_ca:/dev/ttyUSB_ca
+    environment:
+      - ROS_MASTER_URI=http://master:11311
+    depends_on:
+      - master
+    extra_hosts:
+      - "master:20.1.0.6"
+      - "lidar1:20.1.0.7"
+      - "viz:20.1.0.8"
+      - "create2_driver:20.1.0.10"
+      - "teleop1:20.1.0.11"
+    networks:
+      net2:
+        ipv4_address: 20.1.0.10
+    command: /bin/bash -c "sleep 13; source /root/create_ws/devel/setup.bash; roslaunch ca_driver create_2.launch"
+
+networks:
+  net2:
+    external: true
